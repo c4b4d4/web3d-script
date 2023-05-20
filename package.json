@@ -9,6 +9,7 @@
     "lib": "lib"
   },
   "scripts": {
+    "build":"ncc build index.js -m -o dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "c4b4d4",

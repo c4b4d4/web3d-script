@@ -1,3 +1,5 @@
+import { guid } from "./index.js";
+
 export default class Base
 {	
 	
@@ -64,14 +66,22 @@ export default class Base
 		return this.timers[id.id];
 	}
 	
-	async attach(ref,type,id,cb,ignoreAtt){
+	async on(ref,type,id,cb,ignoreAtt){
+		
+		if((typeof ref)=="string"){
+			ignoreAtt = cb;
+			cb = id;
+			id = type;
+			type = ref;
+			ref = globalHolder;
+		}
 		
 		if(!ignoreAtt){
 			ignoreAtt = 0;
 		}
 		
 		
-		if(ref.holder && ref.holder.attach) ref = ref.holder;
+		if(ref.holder && ref.holder.on) ref = ref.holder;
 
 		if(typeof id == 'function'){
 			cb = id;
@@ -87,28 +97,36 @@ export default class Base
 		this.listeners[type][parentId][id] = {instance:ref,cb};
 		
 		if(ignoreAtt<2){
-			await ref.attach(this,"kill","defaultkill_"+this.id+"_"+type+"_"+id,()=>{
-				this.deattach(ref,type,id,true);
+			await ref.on(this,"kill","defaultkill_"+this.id+"_"+type+"_"+id,()=>{
+				this.off(ref,type,id,true);
 			},(ignoreAtt+1))
 		}
 		
 		await this._attached(type,ref);
 		
 		return {deattach:()=>{
-			this.deattach(ref,type,id);
+			this.off(ref,type,id);
 		}}
 	}
 
 	
 
 	
-	async deattach(ref,type,id,ignore){
-		if(!id){
-			
+	async off(ref,type,id,ignore){
+		
+		if((typeof ref)=="string"){
+			ignoreAtt = cb;
+			cb = id;
+			id = type;
+			type = ref;
+			ref = globalHolder;
+		}
+		
+		if(!id){	
 			return;
 		}
 		
-		if(ref.holder && ref.holder.attach) ref = ref.holder;
+		if(ref.holder && ref.holder.on) ref = ref.holder;
 		let parentId = ref.id;
 		
 		
@@ -127,7 +145,7 @@ export default class Base
 		}
 		
 		if(!ignore){
-			await ref.deattach(this,"kill","defaultkill_"+this.id+"_"+type+"_"+id,true);
+			await ref.off(this,"kill","defaultkill_"+this.id+"_"+type+"_"+id,true);
 		}
 		
 		await this._deattached(type,ref);
@@ -151,7 +169,7 @@ export default class Base
 					
 					const ref = this.listeners[type][machine][id];
 					if(ref && ref.instance){
-						ref.instance.deattach(this,"kill",this.id+"_"+type+"_"+id);
+						ref.instance.off(this,"kill",this.id+"_"+type+"_"+id);
 					}
 					
 				}
@@ -177,3 +195,5 @@ export default class Base
 		
 	}
 }
+
+const globalHolder = new Base();

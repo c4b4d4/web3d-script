@@ -1,3 +1,5 @@
-import Interpreter from "./lib/interpreter.js";
+import _Interpreter from "./lib/interpreter.js";
 
-export default { Interpreter };
+const Interpreter = new _Interpreter();
+
+export { Interpreter };
